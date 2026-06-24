@@ -211,10 +211,19 @@ app.listen(PORT, () => {
 ║  🚀 TV-Telegram Webhook Server                  ║
 ║  Port: ${PORT}                                      ║
 ║  Endpoint: POST /webhook                        ║
+║  Bot: XAUUSD Alert (H4 + D1)                    ║
 ╚══════════════════════════════════════════════════╝
     `);
 
     if (BOT_TOKEN === 'ISI_BOT_TOKEN_KAMU') {
         console.log('⚠️  Set BOT_TOKEN & CHAT_ID di environment variable!');
+    } else {
+        // Auto-start alert bot
+        try {
+            require('./bot.js');
+            console.log('🤖 XAUUSD Alert Bot started!');
+        } catch (err) {
+            console.log('ℹ️  Bot not loaded:', err.message);
+        }
     }
 });
