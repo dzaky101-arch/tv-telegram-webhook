@@ -633,7 +633,7 @@ function startHealthServer() {
 //  STARTUP
 // ══════════════════════════════════════════════════════════════════
 
-async function main() {
+async function main(standalone) {
   startTime = new Date().toISOString();
 
   console.log(`
@@ -655,13 +655,16 @@ async function main() {
   if (missing.length > 0) {
     console.error(`❌ Missing environment variables: ${missing.join(', ')}`);
     console.error('   Set them in Railway dashboard or .env file.');
-    process.exit(1);
+    if (standalone) process.exit(1);
+    return;
   }
 
   console.log('✅ All environment variables loaded');
 
-  // Start health server for Railway
-  startHealthServer();
+  // Start health server ONLY when running standalone (not from server.js)
+  if (standalone) {
+    startHealthServer();
+  }
 
   // Send startup message
   const startMsg = [
@@ -707,8 +710,19 @@ process.on('unhandledRejection', (reason) => {
   console.error('💥 Unhandled rejection:', reason);
 });
 
-// ── GO ──
-main().catch((err) => {
-  console.error('💥 Fatal startup error:', err.message);
-  process.exit(1);
-});
+// ── Detect: standalone (node bot.js) vs required (from server.js) ──
+const isStandalone = require.main === module;
+
+if (isStandalone) {
+  // Running directly: node bot.js
+  main(true).catch((err) => {
+    console.error('💥 Fatal startup error:', err.message);
+    process.exit(1);
+  });
+} else {
+  // Required from server.js — no health server, just start bot
+  main(false).catch((err) => {
+    console.error('💥 Bot startup error:', err.message);
+  });
+}
+
